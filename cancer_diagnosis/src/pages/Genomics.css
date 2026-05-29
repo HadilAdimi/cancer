@@ -1,0 +1,160 @@
+.genomic-page {
+  min-height: 100vh;
+  background: #e9f7f9;
+  padding: 40px;
+}
+
+.genomic-header {
+  margin-bottom: 30px;
+}
+
+.genomic-header h1 {
+  font-size: 34px;
+  color: #111827;
+  margin: 0 0 10px 0;
+}
+
+.genomic-header p {
+  font-size: 15px;
+  color: #515763;
+  margin: 0;
+}
+
+.genomic-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+/* Cards */
+.input-card,
+.result-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Titles */
+.input-card h2,
+.result-card h2 {
+  font-size: 20px;
+  color: #111827;
+  margin-bottom: 20px;
+}
+
+/* Textarea */
+.input-card textarea {
+  width: 100%;
+  height: 220px;
+
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+
+  padding: 15px;
+  font-size: 14px;
+
+  resize: none;
+
+  outline: none;
+}
+
+.input-card textarea:focus {
+  border-color: #39a5b6;
+}
+
+/* Button */
+.input-card button {
+  width: 100%;
+  height: 48px;
+
+  margin-top: 15px;
+
+  background: #39a5b6;
+  color: white;
+
+  border: none;
+  border-radius: 12px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.input-card button:hover {
+  background: #378794;
+  transform: translateY(-2px);
+}
+
+/* Result */
+.result-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-card p {
+  font-size: 15px;
+  color: #374151;
+  margin: 10px 0;
+}
+
+/* Loader */
+.loader {
+  width: 60px;
+  height: 60px;
+
+  border: 5px solid #dbeafe;
+  border-top: 5px solid #39a5b6;
+  border-radius: 50%;
+
+  margin: 50px auto;
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Result items */
+.result-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.item strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .genomic-container {
+    grid-template-columns: 1fr;
+  }
+
+  .genomic-page {
+    padding: 20px;
+  }
+}

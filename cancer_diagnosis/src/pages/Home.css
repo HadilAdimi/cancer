@@ -1,0 +1,300 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Roboto+Slab:wght@100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+
+/* Base */
+body {
+  margin: 0;
+  font-family: "Roboto Slab", serif;
+  background: #e9f7f9;
+  color: #1a1a1a;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px;
+  padding: 10px 50px;
+  border-radius: 45px;
+  background: #41a9b9;
+  border-bottom: 1px solid #096b7a;
+}
+
+.logo {
+  font-size: 40px;
+  font-weight: 600;
+  color: #f3feff;
+}
+
+.login-btn {
+  padding: 12px 20px;
+  border: none;
+  background: #0e6370;
+  color: white;
+  font-size: 18px;
+  border-radius: 50px;
+  transition: 0.2s;
+}
+
+.login-btn:hover {
+  background: #138a9c;
+}
+
+/* Hero layout */
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 90px 60px;
+  gap: 40px;
+}
+
+/* Left side */
+.hero-content {
+  max-width: 520px;
+  margin-left: 70px;
+}
+
+.hero-content h2 {
+  font-size: 38px;
+  color: #096b7a;
+  margin-bottom: 15px;
+}
+
+.hero-content p {
+  color: #000000;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+/* Buttons */
+.hero-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.primary-btn {
+  padding: 14px 20px;
+  border: none;
+  background: #1795a9;
+  color: white;
+  border-radius: 12px;
+}
+
+.secondary-btn {
+  padding: 12px 20px;
+  border: 1px solid #096b7a;
+  background: transparent;
+  color: #096b7a;
+  border-radius: 12px;
+}
+
+/* Right visual */
+.hero-visual {
+  position: relative;
+  width: 320px;
+  height: 260px;
+}
+
+/* Shapes */
+.shape {
+  position: absolute;
+  margin-left: -70px;
+  z-index: 1;
+}
+
+/* Big main shape */
+.shape.big {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1795a9, #5cd1e3);
+  border-radius: 60% 40% 30% 70% / 40% 60% 40% 60%;
+}
+
+/* Medium floating */
+.shape.medium {
+  width: 160px;
+  height: 120px;
+  background: #65d5e6;
+  top: -20px;
+  right: 18px;
+  border-radius: 30% 70% 60% 40% / 50% 30% 70% 50%;
+}
+
+/* Small accent */
+.shape.small {
+  width: 80px;
+  height: 80px;
+  background: #adedf7;
+  bottom: 5px;
+  left: -5px;
+  border-radius: 70% 30% 50% 50% / 40% 60% 30% 70%;
+}
+.hero-img {
+  position: absolute;
+  z-index: 2;
+  width: 3000px;
+  height: 300px;
+  left: -60px;
+}
+
+/* Big card */
+.visual-card {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #096b7a, #1795a9);
+  border-radius: 20px;
+}
+
+/* Small floating card */
+.visual-card.small {
+  position: absolute;
+  width: 120px;
+  height: 100px;
+  background: white;
+  top: -20px;
+  right: -20px;
+  border-radius: 15px;
+  border: 1px solid #e0e6ed;
+}
+
+
+
+/* Cancer types */
+.types {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 30px 60px;
+  justify-content: center;
+}
+
+.type-card {
+  padding: 12px 22px;
+  border-radius: 30px;
+  background: white;
+  border: 1px solid #dbeafe;
+  cursor: pointer;
+  transition: 0.2s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.type-card:hover {
+  background: #c9f3fb;
+}
+.type-card img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  margin-bottom: 8px;
+}
+.type-card span {
+  font-size: 14px;
+  color: #000000;
+  text-align: center;
+}
+
+.type-card.active {
+  background: #8beeee;
+  color: white;
+  border: none;
+}
+/* Stats section */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  padding: 40px 60px;
+}
+
+/* Card */
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid #e0e6ed;
+  transition: 0.2s;
+}
+
+/* Number */
+.stat-card h3 {
+  font-size: 28px;
+  color: #096b7a;
+  margin-bottom: 8px;
+}
+.label{
+  color: #096b7a;
+  margin: 20px;
+  justify-self: center;
+}
+.card-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+/* Label */
+.stat-card p {
+  font-size: 14px;
+  color: #000000;
+}
+
+/* Hover */
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+/* Research grid */
+.research {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+  padding: 40px 60px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid #e0e6ed;
+  transition: 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.card p {
+  font-size: 13px;
+  color: #666;
+}
+
+.card span {
+  font-size: 12px;
+  color: #999;
+}
+
+.card a {
+  margin-top: auto;
+  text-decoration: none;
+  color: #1795a9;
+  font-weight: 500;
+}
+.footer{
+  text-align: center;
+}

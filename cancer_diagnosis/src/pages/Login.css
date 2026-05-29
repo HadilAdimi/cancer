@@ -1,0 +1,122 @@
+/* Page */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #eef3f9;
+  position: relative;
+  overflow: hidden;
+}
+.login-page::before {
+  content: "";
+  position: absolute;
+
+  width: 1500px;
+  height: 1500px;
+
+  background: #1795a9;
+  border-radius: 50%;
+
+  top: -800px;
+  right: -700px;
+
+  z-index: 0;
+}
+
+/* Card */
+.login-card {
+  width: 340px;
+  background: white;
+  padding: 40px 30px;
+  border-radius: 16px;
+  border: 1px solid #e0e6ed;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  position: relative;
+  z-index: 1;
+  right: 350px;
+}
+.img {
+  position: absolute;
+  width: 370px;
+  top: 40px;
+  left: 450px;
+  z-index: 2;
+}
+
+/* Title */
+.login-title {
+  text-align: center;
+  color: #096b7a;
+  margin-bottom: 5px;
+}
+
+/* Subtitle */
+.login-subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Inputs */
+.login-input {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #d5f2ec;
+  outline: none;
+}
+
+.login-input:focus {
+  border-color: #03C9D7;
+}
+
+/* Options */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+}
+
+.forgot {
+  color: #03C9D7;
+  cursor: pointer;
+}
+
+/* Button */
+.loginbtn {
+  padding: 12px;
+  background: #1795a9;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.loginbtn:hover {
+  background: #4cb9ca;
+}
+.back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: #096b7a;
+  border-radius: 100px;
+  padding: 15px;
+  border: none;
+  cursor: pointer;
+  color: white;
+}
+.back-btn:hover {
+  background-color: #209fb3; 
+}
+

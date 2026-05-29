@@ -1,0 +1,273 @@
+.clinical-page {
+  min-height: 100vh;
+  padding: 40px;
+  background: #e9f7f9;
+}
+
+
+
+.clinical-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.clinical-header h1 {
+  font-size: 34px;
+  color: #111827;
+  margin-bottom: 5px;
+  margin-top: -80px;
+}
+
+.clinical-header p {
+  color: #484d56;
+  font-size: 16px;
+  margin-bottom: -10px;
+}
+
+.clinical-card {
+  background: white;
+  border-radius: 24px;
+  padding: 35px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+  max-width: 1300px;
+  margin: auto;
+}
+
+.clinical-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #292f3a;
+}
+
+.field input,
+.field select {
+  height: 48px;
+  border: 1px solid #94dbe6;
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #f9fafb;
+  transition: 0.3s;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: #39a5b6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.tnm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.tnm-grid select {
+  width: 100%;
+}
+
+.predict-btn {
+  grid-column: 1 / -1;
+  height: 55px;
+  border: none;
+  border-radius: 14px;
+  background: #39a5b6;
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+
+.predict-btn:hover {
+  background: #1e7b8a;
+}
+
+.predict-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.result-modal {
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+}
+
+.result-modal h2 {
+  text-align: center;
+  font-size: 26px;
+  color: #0f172a;
+  margin-bottom: 20px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.chart-card {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chart-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.chart-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.riskLevel {
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.riskLevel[data-level="low"] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.riskLevel[data-level="medium"] {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.riskLevel[data-level="high"] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.survival-box {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.survival-box h3 {
+  font-size: 15px;
+  color: #334155;
+  margin: 0;
+}
+
+.survival-box p {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.close-btn {
+  width: 60px;
+  padding: 12px;
+  border: none;
+  border-radius: 25px;
+  background: #ef4444;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #dc2626;
+}
+.btns{
+  display: flex;
+}
+
+.download-btn{
+  width: 100px;
+  height: 45px;
+  padding: 10px;
+  border: none;
+  border-radius: 25px;
+  background: #3ca787;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 875px;
+  transition: 0.3s;
+}
+
+.download-btn:hover{
+  opacity: 0.9;
+  background-color: #156e6e;
+}
+
+@media (max-width: 768px) {
+  .clinical-page {
+    padding: 20px;
+  }
+
+  .clinical-card,
+  .result-modal {
+    padding: 20px;
+  }
+
+  .tnm-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-form {
+    grid-template-columns: 1fr;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .result-modal {
+    max-width: 18px;
+  }
+}
