@@ -22,11 +22,9 @@ val_transform = transforms.Compose([
     transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])
 ])
 
-# 🔥 2. DATASET
 train_data = datasets.ImageFolder("dataset/train", transform=train_transform)
 val_data = datasets.ImageFolder("dataset/val", transform=val_transform)
 
-# 🔥 3. BALANCED SAMPLER
 class_counts = [0] * len(train_data.classes)
 for _, label in train_data:
     class_counts[label] += 1
@@ -44,10 +42,8 @@ val_loader = torch.utils.data.DataLoader(
     val_data, batch_size=16, shuffle=False
 )
 
-# 🔥 4. MODEL (ResNet50)
 model = models.resnet50(weights="DEFAULT")
 
-# Freeze
 for param in model.parameters():
     param.requires_grad = False
 
@@ -58,7 +54,6 @@ for param in model.layer3.parameters():
 for param in model.layer4.parameters():
     param.requires_grad = True
 
-# 🔥 Head
 model.fc = nn.Sequential(
     nn.Linear(model.fc.in_features, 256),
     nn.ReLU(),
@@ -68,20 +63,17 @@ model.fc = nn.Sequential(
 
 model = model.to(device)
 
-# 🔥 5. LOSS + OPTIMIZER
 criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0001)
 
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
 
-# 🔥 6. TRAINING
 best_acc = 0
 patience = 5
 counter = 0
 
 for epoch in range(50):
 
-    # ===== TRAIN =====
     model.train()
     train_correct, train_total = 0, 0
 
@@ -101,7 +93,6 @@ for epoch in range(50):
 
     train_acc = 100 * train_correct / train_total
 
-    # ===== VALIDATION =====
     model.eval()
     val_correct, val_total = 0, 0
 
@@ -113,7 +104,7 @@ for epoch in range(50):
             images, labels = images.to(device), labels.to(device)
 
             outputs = model(images)
-            probs = torch.softmax(outputs, dim=1)  # 🔥 probabilities
+            probs = torch.softmax(outputs, dim=1)  
             _, preds = torch.max(probs, 1)
 
             val_total += labels.size(0)
@@ -124,7 +115,7 @@ for epoch in range(50):
 
     val_acc = 100 * val_correct / val_total
 
-    print(f"\n🔥 Epoch {epoch+1}")
+    print(f"\n Epoch {epoch+1}")
     print(f"Train Accuracy: {train_acc:.2f}%")
     print(f"Validation Accuracy: {val_acc:.2f}%")
 
@@ -138,7 +129,7 @@ for epoch in range(50):
     if val_acc > best_acc:
         best_acc = val_acc
         torch.save(model.state_dict(), "image_model.pth")
-        print("✅ Best Model Saved")
+        print(" Best Model Saved")
         counter = 0
     else:
         counter += 1

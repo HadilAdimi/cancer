@@ -218,6 +218,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  margin-top: 40px;
 }
 
 .close-btn:hover {
@@ -238,7 +239,8 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  margin-left: 875px;
+  margin-left: -320px;
+  margin-top: 40px;
   transition: 0.3s;
 }
 
