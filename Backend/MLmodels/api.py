@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch_geometric.data import Data
+from torch_geometric.nn import GCNConv, global_mean_pool
 from torchvision import transforms, models
 from PIL import Image
 import cv2
@@ -12,9 +15,14 @@ import base64
 import os
 import io
 import pandas as pd
+import pickle
 import joblib
+import warnings
+from typing import Optional, List, Dict, Any
 
-app = FastAPI(title="Cancer Diagnosis API", description="Combined Imaging and Clinical Analysis API")
+warnings.filterwarnings('ignore')
+
+app = FastAPI(title="Cancer Diagnosis API", description="Combined Imaging, Clinical, and Genomic Analysis API")
 
 # CORS middleware
 app.add_middleware(
@@ -25,14 +33,153 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==================== IMAGING API SECTION ====================
-
-# 🔥 Device for imaging model
+# ==================== DEVICE CONFIGURATION ====================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device for imaging: {device}")
+print(f"Using device: {device}")
 
-# 🔥 Load imaging model
-print("Loading imaging model...")
+# ==================== GENOMIC MODEL SECTION ====================
+
+# GNN Branch Definition
+class GNNBranch(torch.nn.Module):
+    def __init__(self, input_dim, hidden_dim=64, dropout=0.3):
+        super().__init__()
+        self.conv1 = GCNConv(input_dim, hidden_dim)
+        self.conv2 = GCNConv(hidden_dim, hidden_dim)
+        self.conv3 = GCNConv(hidden_dim, hidden_dim)
+        self.dropout = dropout
+        
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv3(x, edge_index)
+        x = F.relu(x)
+        x = global_mean_pool(x, batch)
+        return x
+
+class FusionGNN(torch.nn.Module):
+    def __init__(self, dim_mirna, dim_gene, dim_protein, hidden_dim=64, output_dim=2, dropout=0.3):
+        super().__init__()
+        self.gnn_mirna = GNNBranch(dim_mirna, hidden_dim, dropout)
+        self.gnn_gene = GNNBranch(dim_gene, hidden_dim, dropout)
+        self.gnn_protein = GNNBranch(dim_protein, hidden_dim, dropout)
+        self.fc1 = torch.nn.Linear(hidden_dim * 3, hidden_dim)
+        self.fc2 = torch.nn.Linear(hidden_dim, output_dim)
+        self.dropout = dropout
+        
+    def forward(self, data_mirna, data_gene, data_protein):
+        x_m = self.gnn_mirna(data_mirna)
+        x_g = self.gnn_gene(data_gene)
+        x_p = self.gnn_protein(data_protein)
+        x = torch.cat([x_m, x_g, x_p], dim=1)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.fc2(x)
+        return x
+
+# Load Genomic Model
+GENOMIC_MODEL_PATH = "fusion_model.pkl"
+genomic_model = None
+genomic_checkpoint = None
+edge_mirna = None
+edge_gene = None
+edge_protein = None
+GRAPH_FOLDERS = {
+    'mirna': "./data/graphs_mirna_corrected",
+    'gene': "./data/graphs_gene_corrected",
+    'protein': "./data/graphs_protein_corrected"
+}
+
+def load_edge_structure(folder):
+    """Load edge structure from graph folder"""
+    if not os.path.exists(folder):
+        print(f"⚠️ Warning: Folder {folder} not found")
+        return None
+    
+    for f in os.listdir(folder):
+        if f.endswith('.pt'):
+            graph_path = os.path.join(folder, f)
+            try:
+                graph = torch.load(graph_path, weights_only=False)
+            except:
+                graph = torch.load(graph_path)
+            return graph.edge_index
+    return None
+
+def load_genomic_model():
+    """Load the genomic fusion model"""
+    global genomic_model, genomic_checkpoint, edge_mirna, edge_gene, edge_protein
+    
+    try:
+        if not os.path.exists(GENOMIC_MODEL_PATH):
+            print(f"⚠️ Warning: {GENOMIC_MODEL_PATH} not found")
+            return False
+        
+        with open(GENOMIC_MODEL_PATH, 'rb') as f:
+            checkpoint = pickle.load(f)
+        
+        genomic_checkpoint = checkpoint
+        
+        # Create model
+        model = FusionGNN(
+            dim_mirna=checkpoint['dim_mirna'],
+            dim_gene=checkpoint['dim_gene'],
+            dim_protein=checkpoint['dim_protein'],
+            hidden_dim=checkpoint['hidden_dim'],
+            output_dim=checkpoint['output_dim'],
+            dropout=checkpoint['dropout']
+        )
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+        model = model.to(device)
+        genomic_model = model
+        
+        # Load edge structures
+        for folder_path in GRAPH_FOLDERS.values():
+            if not os.path.exists(folder_path):
+                print(f"⚠️ Warning: Graph folder {folder_path} not found")
+                return False
+        
+        edge_mirna = load_edge_structure(GRAPH_FOLDERS['mirna'])
+        edge_gene = load_edge_structure(GRAPH_FOLDERS['gene'])
+        edge_protein = load_edge_structure(GRAPH_FOLDERS['protein'])
+        
+        if all([edge_mirna is not None, edge_gene is not None, edge_protein is not None]):
+            print("✅ Genomic model loaded successfully!")
+            print(f"   - Best validation accuracy: {checkpoint.get('best_val_acc', 'N/A')}")
+            return True
+        else:
+            print("❌ Failed to load edge structures")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error loading genomic model: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+# Load genomic model
+GENOMIC_MODEL_LOADED = load_genomic_model()
+
+def values_to_graph(values, edge_index):
+    """Convert values to graph data structure"""
+    arr = np.array(values).reshape(1, -1)
+    norm = np.linalg.norm(arr)
+    if norm == 0:
+        norm = 1
+    arr_norm = arr / norm
+    sim_matrix = np.dot(arr_norm.T, arr_norm)
+    np.fill_diagonal(sim_matrix, 0)
+    x = torch.tensor(sim_matrix, dtype=torch.float)
+    return Data(x=x, edge_index=edge_index, num_nodes=len(values))
+
+# ==================== IMAGING MODEL SECTION ====================
+
+# Load imaging model
 imaging_model = models.resnet50(weights=None)
 imaging_model.fc = nn.Sequential(
     nn.Linear(imaging_model.fc.in_features, 256),
@@ -41,17 +188,18 @@ imaging_model.fc = nn.Sequential(
     nn.Linear(256, 2)
 )
 
-# Check if imaging model file exists
+IMAGING_MODEL_LOADED = False
 if os.path.exists("image_model.pth"):
     imaging_model.load_state_dict(torch.load("image_model.pth", map_location=device))
+    imaging_model.to(device)
+    imaging_model.eval()
+    IMAGING_MODEL_LOADED = True
     print("✅ Imaging model loaded successfully")
 else:
     print("⚠️ Warning: image_model.pth not found! Using untrained model.")
+    IMAGING_MODEL_LOADED = False
 
-imaging_model.to(device)
-imaging_model.eval()
-
-# 🔥 Transform for imaging
+# Transform for imaging
 imaging_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -59,7 +207,7 @@ imaging_transform = transforms.Compose([
                          [0.229, 0.224, 0.225])
 ])
 
-# 🔥 Grad-CAM + BOX for imaging
+# Grad-CAM + BOX for imaging
 def generate_box(model, img_tensor):
     gradients = []
     activations = []
@@ -107,49 +255,43 @@ def generate_box(model, img_tensor):
 
     return contours, cam
 
-# ==================== CLINICAL API SECTION ====================
+# ==================== CLINICAL MODEL SECTION ====================
 
-# 🔥 Load clinical model
-print("Loading clinical model...")
+# Load clinical model
 cox_model = None
 preprocessor = None
 clinical_feature_names = None
 allowed_categories = None
+CLINICAL_MODEL_LOADED = False
 
 try:
     model_path = "cox_model.pkl"
     if os.path.exists(model_path):
         bundle = joblib.load(model_path)
-        print(f"✅ Loaded bundle from {model_path}")
-        print(f"   Bundle type: {type(bundle)}")
+        print(f"✅ Loaded clinical model bundle from {model_path}")
         
         if isinstance(bundle, dict):
-            print(f"   Keys in bundle: {list(bundle.keys())}")
-            # Match the keys from your training code
             cox_model = bundle.get("cox_model")
             preprocessor = bundle.get("preprocessor")
             clinical_feature_names = bundle.get("feature_names")
             allowed_categories = bundle.get("allowed_categories")
             
-            print(f"   - cox_model: {'Yes' if cox_model else 'No'}")
-            print(f"   - preprocessor: {'Yes' if preprocessor else 'No'}")
-            print(f"   - feature_names: {'Yes' if clinical_feature_names is not None else 'No'}")
+            if cox_model is not None:
+                CLINICAL_MODEL_LOADED = True
+                print("✅ Clinical model ready")
+            else:
+                print("⚠️ Could not extract model from bundle")
         else:
             cox_model = bundle
-            print("   Loaded as direct model object")
-            
-        if cox_model is not None:
-            print("✅ Clinical model ready")
-        else:
-            print("⚠️ Could not extract model from bundle")
+            CLINICAL_MODEL_LOADED = True
+            print("✅ Clinical model loaded as direct object")
     else:
-        print(f"⚠️ Warning: {model_path} not found in {os.getcwd()}")
-        print(f"   Current directory contents: {os.listdir('.')}")
+        print(f"⚠️ Warning: {model_path} not found")
         
 except Exception as e:
     print(f"❌ Error loading clinical model: {e}")
-    import traceback
-    traceback.print_exc()
+
+# ==================== PYDANTIC MODELS ====================
 
 class Patient(BaseModel):
     age: float
@@ -169,6 +311,26 @@ class Patient(BaseModel):
     karnofsky_performance_score: float = 50
     lymph_node_examined_count: float = 0
     number_of_lymphnodes_positive: float = 0
+
+class GenomicPredictionRequest(BaseModel):
+    patient_id: Optional[str] = None
+    mirna_values: Optional[List[float]] = None
+    gene_values: Optional[List[float]] = None
+    protein_values: Optional[List[float]] = None
+    mirna_names: Optional[List[str]] = None
+    gene_names: Optional[List[str]] = None
+    protein_names: Optional[List[str]] = None
+
+class ClinicalPredictionResponse(BaseModel):
+    success: bool
+    type: str
+    hazard_score: float
+    risk_score: float
+    risk_level: str
+    median_survival_days: int
+    survival_probability_percent: Dict[str, float]
+
+# ==================== HELPER FUNCTIONS ====================
 
 def clean_cat(value):
     if value is None:
@@ -297,16 +459,19 @@ def preprocess_clinical(data: Patient):
 async def root():
     return {
         "name": "Cancer Diagnosis API",
-        "version": "2.0",
+        "version": "3.0",
         "status": "running",
         "endpoints": {
             "imaging": "/predict-imaging",
             "clinical": "/predict-clinical",
+            "genomic": "/predict-genomic",
+            "genomic_csv": "/predict-genomic-csv",
             "health": "/health"
         },
         "models": {
-            "imaging_model_loaded": os.path.exists("image_model.pth"),
-            "clinical_model_loaded": cox_model is not None
+            "imaging_model_loaded": IMAGING_MODEL_LOADED,
+            "clinical_model_loaded": CLINICAL_MODEL_LOADED,
+            "genomic_model_loaded": GENOMIC_MODEL_LOADED
         }
     }
 
@@ -314,8 +479,9 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "imaging_model_loaded": os.path.exists("image_model.pth"),
-        "clinical_model_loaded": cox_model is not None,
+        "imaging_model_loaded": IMAGING_MODEL_LOADED,
+        "clinical_model_loaded": CLINICAL_MODEL_LOADED,
+        "genomic_model_loaded": GENOMIC_MODEL_LOADED,
         "device": str(device)
     }
 
@@ -323,7 +489,7 @@ async def health_check():
 
 @app.post("/predict-imaging")
 async def predict_imaging(image: UploadFile = File(...)):
-    if not os.path.exists("image_model.pth"):
+    if not IMAGING_MODEL_LOADED:
         raise HTTPException(status_code=503, detail="Imaging model not loaded")
     
     try:
@@ -382,7 +548,7 @@ async def predict_imaging(image: UploadFile = File(...)):
 
 @app.post("/predict-clinical")
 async def predict_clinical(data: Patient):
-    if cox_model is None:
+    if not CLINICAL_MODEL_LOADED:
         raise HTTPException(status_code=503, detail=f"Clinical model not loaded. File exists: {os.path.exists('cox_model.pkl')}")
     
     try:
@@ -456,11 +622,226 @@ async def predict_clinical(data: Patient):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
+# ==================== GENOMIC ENDPOINTS ====================
+
+@app.post("/predict-genomic")
+async def predict_genomic(request: GenomicPredictionRequest):
+    """
+    Predict cancer stage from genomic data (miRNA, Gene, Protein)
+    
+    Either provide patient_id to load pre-saved graphs,
+    or provide the actual values directly.
+    """
+    if not GENOMIC_MODEL_LOADED:
+        raise HTTPException(status_code=503, detail="Genomic model not loaded")
+    
+    try:
+        # Case 1: Use patient_id to load pre-saved graphs
+        if request.patient_id:
+            graphs = {}
+            for mtype, folder in GRAPH_FOLDERS.items():
+                graph_path = os.path.join(folder, f"{request.patient_id}.pt")
+                if not os.path.exists(graph_path):
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Graph file not found: {graph_path} for type: {mtype}"
+                    )
+                try:
+                    graph = torch.load(graph_path, weights_only=False)
+                except:
+                    graph = torch.load(graph_path)
+                graphs[mtype] = graph.to(device)
+            
+            # Make prediction
+            with torch.no_grad():
+                out = genomic_model(graphs['mirna'], graphs['gene'], graphs['protein'])
+                pred = out.argmax(dim=1).item()
+                probs = torch.softmax(out, dim=1).cpu().numpy()[0]
+            
+            stage = "Late" if pred == 1 else "Early"
+            stage_full = "Late (Stage III-IV)" if pred == 1 else "Early (Stage I-II)"
+            
+            return {
+                "success": True,
+                "type": "genomic",
+                "patient_id": request.patient_id,
+                "prediction": pred,
+                "stage": stage,
+                "stage_full": stage_full,
+                "confidence": float(max(probs)),
+                "probabilities": {
+                    "Early": float(probs[0]),
+                    "Late": float(probs[1])
+                },
+                "method": "patient_id"
+            }
+        
+        # Case 2: Use provided values
+        elif all([request.mirna_values, request.gene_values, request.protein_values]):
+            # Validate lengths
+            if len(request.mirna_values) != 49:
+                raise HTTPException(400, f"Expected 49 miRNA values, got {len(request.mirna_values)}")
+            if len(request.gene_values) != 50:
+                raise HTTPException(400, f"Expected 50 Gene values, got {len(request.gene_values)}")
+            if len(request.protein_values) != 50:
+                raise HTTPException(400, f"Expected 50 Protein values, got {len(request.protein_values)}")
+            
+            # Convert to graphs
+            graph_mirna = values_to_graph(request.mirna_values, edge_mirna).to(device)
+            graph_gene = values_to_graph(request.gene_values, edge_gene).to(device)
+            graph_protein = values_to_graph(request.protein_values, edge_protein).to(device)
+            
+            # Make prediction
+            with torch.no_grad():
+                out = genomic_model(graph_mirna, graph_gene, graph_protein)
+                pred = out.argmax(dim=1).item()
+                probs = torch.softmax(out, dim=1).cpu().numpy()[0]
+            
+            stage = "Late" if pred == 1 else "Early"
+            stage_full = "Late (Stage III-IV)" if pred == 1 else "Early (Stage I-II)"
+            
+            response = {
+                "success": True,
+                "type": "genomic",
+                "prediction": pred,
+                "stage": stage,
+                "stage_full": stage_full,
+                "confidence": float(max(probs)),
+                "probabilities": {
+                    "Early": float(probs[0]),
+                    "Late": float(probs[1])
+                },
+                "method": "values",
+                "feature_names": {
+                    "mirna": request.mirna_names or [f"miRNA_{i+1}" for i in range(49)],
+                    "gene": request.gene_names or [f"Gene_{i+1}" for i in range(50)],
+                    "protein": request.protein_names or [f"Protein_{i+1}" for i in range(50)]
+                }
+            }
+            
+            # Include values if they were provided
+            if request.mirna_values:
+                response["values"] = {
+                    "mirna": request.mirna_values,
+                    "gene": request.gene_values,
+                    "protein": request.protein_values
+                }
+            
+            return response
+        
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Either provide 'patient_id' or all of: 'mirna_values', 'gene_values', 'protein_values'"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Genomic prediction failed: {str(e)}")
+
+@app.post("/predict-genomic-csv")
+async def predict_genomic_csv(file: UploadFile = File(...)):
+    """
+    Predict cancer stage from CSV file containing genomic data
+    
+    CSV format must have columns: Feature, Type, Value
+    - Type values: 'mirna', 'gene', 'protein'
+    - 49 miRNA features, 50 Gene features, 50 Protein features
+    """
+    if not GENOMIC_MODEL_LOADED:
+        raise HTTPException(status_code=503, detail="Genomic model not loaded")
+    
+    try:
+        # Read CSV
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+        
+        # Validate columns
+        required_cols = ['Feature', 'Type', 'Value']
+        for col in required_cols:
+            if col not in df.columns:
+                raise HTTPException(
+                    400,
+                    f"Missing column: {col}. Expected columns: {', '.join(required_cols)}"
+                )
+        
+        # Extract values by type
+        mirna_df = df[df['Type'].str.lower() == 'mirna']
+        gene_df = df[df['Type'].str.lower() == 'gene']
+        protein_df = df[df['Type'].str.lower() == 'protein']
+        
+        # Validate counts
+        if len(mirna_df) != 49:
+            raise HTTPException(400, f"Expected 49 miRNA values, got {len(mirna_df)}")
+        if len(gene_df) != 50:
+            raise HTTPException(400, f"Expected 50 Gene values, got {len(gene_df)}")
+        if len(protein_df) != 50:
+            raise HTTPException(400, f"Expected 50 Protein values, got {len(protein_df)}")
+        
+        # Extract values and names
+        mirna_values = mirna_df['Value'].values.tolist()
+        gene_values = gene_df['Value'].values.tolist()
+        protein_values = protein_df['Value'].values.tolist()
+        mirna_names = mirna_df['Feature'].values.tolist()
+        gene_names = gene_df['Feature'].values.tolist()
+        protein_names = protein_df['Feature'].values.tolist()
+        
+        # Convert to graphs
+        graph_mirna = values_to_graph(mirna_values, edge_mirna).to(device)
+        graph_gene = values_to_graph(gene_values, edge_gene).to(device)
+        graph_protein = values_to_graph(protein_values, edge_protein).to(device)
+        
+        # Make prediction
+        with torch.no_grad():
+            out = genomic_model(graph_mirna, graph_gene, graph_protein)
+            pred = out.argmax(dim=1).item()
+            probs = torch.softmax(out, dim=1).cpu().numpy()[0]
+        
+        stage = "Late" if pred == 1 else "Early"
+        stage_full = "Late (Stage III-IV)" if pred == 1 else "Early (Stage I-II)"
+        
+        return {
+            "success": True,
+            "type": "genomic",
+            "prediction": pred,
+            "stage": stage,
+            "stage_full": stage_full,
+            "confidence": float(max(probs)),
+            "probabilities": {
+                "Early": float(probs[0]),
+                "Late": float(probs[1])
+            },
+            "features": {
+                "mirna": list(zip(mirna_names, mirna_values)),
+                "gene": list(zip(gene_names, gene_values)),
+                "protein": list(zip(protein_names, protein_values))
+            },
+            "summary": {
+                "total_features": len(df),
+                "mirna_count": len(mirna_df),
+                "gene_count": len(gene_df),
+                "protein_count": len(protein_df)
+            },
+            "method": "csv"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"CSV prediction failed: {str(e)}")
+
+# ==================== DEBUG ENDPOINTS ====================
+
 @app.get("/clinical/debug")
 async def clinical_debug():
     """Debug endpoint to check clinical model status"""
     return {
-        "model_loaded": cox_model is not None,
+        "model_loaded": CLINICAL_MODEL_LOADED,
         "file_exists": os.path.exists("cox_model.pkl"),
         "current_directory": os.getcwd(),
         "files_in_directory": [f for f in os.listdir(".") if f.endswith('.pkl')],
@@ -469,15 +850,45 @@ async def clinical_debug():
         "model_type": str(type(cox_model)) if cox_model else None
     }
 
+@app.get("/genomic/debug")
+async def genomic_debug():
+    """Debug endpoint to check genomic model status"""
+    return {
+        "model_loaded": GENOMIC_MODEL_LOADED,
+        "model_path": GENOMIC_MODEL_PATH,
+        "file_exists": os.path.exists(GENOMIC_MODEL_PATH),
+        "graph_folders": GRAPH_FOLDERS,
+        "graph_folders_exist": {
+            name: os.path.exists(path) for name, path in GRAPH_FOLDERS.items()
+        },
+        "edge_mirna_loaded": edge_mirna is not None,
+        "edge_gene_loaded": edge_gene is not None,
+        "edge_protein_loaded": edge_protein is not None,
+        "model_type": str(type(genomic_model)) if genomic_model else None,
+        "checkpoint_keys": list(genomic_checkpoint.keys()) if genomic_checkpoint else None,
+        "best_val_acc": genomic_checkpoint.get('best_val_acc', 'N/A') if genomic_checkpoint else None
+    }
+
+# ==================== MAIN ====================
+
 if __name__ == "__main__":
     import uvicorn
     print("\n" + "="*50)
-    print("🚀 Starting Cancer Diagnosis API Server")
+    print("🚀 Starting Cancer Diagnosis API Server v3.0")
     print("="*50)
-    print(f"📍 Server running at: http://127.0.0.1:5000")
-    print(f"📍 Imaging endpoint: http://127.0.0.1:5000/predict-imaging")
-    print(f"📍 Clinical endpoint: http://127.0.0.1:5000/predict-clinical")
-    print(f"📍 Health check: http://127.0.0.1:5000/health")
-    print(f"📍 Debug: http://127.0.0.1:5000/clinical/debug")
+    print(f"📍 Server running at: http://127.0.0.1:8000")
+    print(f"📡 Endpoints:")
+    print(f"   POST /predict-imaging     - Imaging analysis")
+    print(f"   POST /predict-clinical    - Clinical analysis")
+    print(f"   POST /predict-genomic     - Genomic analysis (JSON)")
+    print(f"   POST /predict-genomic-csv - Genomic analysis (CSV file)")
+    print(f"   GET  /health              - Health check")
+    print(f"   GET  /clinical/debug      - Clinical model debug")
+    print(f"   GET  /genomic/debug       - Genomic model debug")
+    print("="*50)
+    print(f"📊 Model Status:")
+    print(f"   Imaging: {'✅ Loaded' if IMAGING_MODEL_LOADED else '❌ Not loaded'}")
+    print(f"   Clinical: {'✅ Loaded' if CLINICAL_MODEL_LOADED else '❌ Not loaded'}")
+    print(f"   Genomic: {'✅ Loaded' if GENOMIC_MODEL_LOADED else '❌ Not loaded'}")
     print("="*50 + "\n")
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

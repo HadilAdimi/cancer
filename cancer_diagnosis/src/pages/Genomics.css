@@ -1,160 +1,570 @@
+/* Main Container */
 .genomic-page {
-  min-height: 100vh;
-  background: #e9f7f9;
-  padding: 40px;
+    min-height: 100vh;
+    background: #e9f7f9;
+    padding: 20px;
 }
 
+/* Back Button */
+.back-btn {
+    background:  #39a5b6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: #2e848f;
+  transform: translateX(-5px);
+}
+
+/* Header */
 .genomic-header {
-  margin-bottom: 30px;
+    text-align: center;
+  margin-bottom: 40px;
 }
 
 .genomic-header h1 {
-  font-size: 34px;
-  color: #111827;
-  margin: 0 0 10px 0;
+    font-size: 2.5rem;
+    color: #0a4953;
+    margin-bottom: 10px;
 }
 
 .genomic-header p {
-  font-size: 15px;
-  color: #515763;
-  margin: 0;
+    color: #64748b;
+    font-size: 16px;
 }
 
+
+/* Container */
 .genomic-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
-/* Cards */
-.input-card,
-.result-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+/* Main Card */
+.genomic-card {
+    background: #ffffff;
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 30px;
 }
 
-/* Titles */
-.input-card h2,
-.result-card h2 {
-  font-size: 20px;
-  color: #111827;
-  margin-bottom: 20px;
+/* Tabs */
+.genomic-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
 }
 
-/* Textarea */
-.input-card textarea {
-  width: 100%;
-  height: 220px;
-
-  border-radius: 14px;
-  border: 1px solid #e5e7eb;
-
-  padding: 15px;
-  font-size: 14px;
-
-  resize: none;
-
-  outline: none;
+.genomic-tab {
+    flex: 1;
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 14px;
+    transition: all 0.3s ease;
 }
 
-.input-card textarea:focus {
-  border-color: #39a5b6;
+.genomic-tab:hover {
+    background: #74f1f10d;
+    color: #333434;
 }
 
-/* Button */
-.input-card button {
-  width: 100%;
-  height: 48px;
-
-  margin-top: 15px;
-
-  background: #39a5b6;
-  color: white;
-
-  border: none;
-  border-radius: 12px;
-
-  font-size: 15px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: 0.2s;
+.genomic-tab.active {
+    background: #39a5b6;
+    color: #ffffff;
+}
+.genomic-tab.active:hover {
+    background: #267885;
+    color: #ffffff;
+    transform: none;
 }
 
-.input-card button:hover {
-  background: #378794;
-  transform: translateY(-2px);
+/* Tab Content */
+.genomic-tab-content {
+    padding: 10px 0;
 }
 
-/* Result */
-.result-card {
-  display: flex;
-  flex-direction: column;
+.genomic-tab-header {
+    margin-bottom: 20px;
 }
 
-.result-card p {
-  font-size: 15px;
-  color: #374151;
-  margin: 10px 0;
+.genomic-tab-header h3 {
+    margin: 0 0 5px 0;
+    color: #313435;
 }
 
-/* Loader */
-.loader {
-  width: 60px;
-  height: 60px;
+.genomic-hint {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0;
+}
 
-  border: 5px solid #dbeafe;
-  border-top: 5px solid #39a5b6;
-  border-radius: 50%;
+/* Upload Area */
+.genomic-upload-area {
+    margin: 20px 0;
+}
 
-  margin: 50px auto;
+.genomic-file-input {
+    display: none;
+}
 
-  animation: spin 1s linear infinite;
+.genomic-file-label {
+    display: block;
+    padding: 30px;
+    background: #f8fafc;
+    border: 2px dashed #39a5b6;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #404a54;
+    font-size: 16px;
+}
+
+.genomic-file-label:hover {
+    border-color: #0a4953;
+  background: #f0f4f8;
+}
+
+/* Patient Input */
+.genomic-patient-input-group {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.genomic-patient-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #39a5b6;
+    border-radius: 8px;
+    color: #333434;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.genomic-patient-input:focus {
+    outline: none;
+    border-color: #0a4953;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.genomic-patient-input::placeholder {
+    color: #636e72;
+}
+
+/* Predict Button */
+.genomic-predict-btn {
+    width: 100%;
+    padding: 14px;
+    background: #39a5b6;;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 0;
+}
+
+.genomic-predict-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+}
+
+.genomic-predict-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading */
+.genomic-loading {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.genomic-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid #39a5b6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
 }
 
 @keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-/* Result items */
-.result-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+/* Error */
+.genomic-error {
+    padding: 15px;
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid #e74c3c;
+    border-radius: 8px;
+    color: #e74c3c;
+    margin: 15px 0;
 }
 
-.item {
-  padding: 12px;
-  border-radius: 12px;
-  background: #f9fafb;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item span {
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.item strong {
-  color: #111827;
-  font-size: 14px;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .genomic-container {
-    grid-template-columns: 1fr;
-  }
-
-  .genomic-page {
+/* Result Card */
+.genomic-result-card {
+    margin-top: 20px;
     padding: 20px;
-  }
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.genomic-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.genomic-result-header h3 {
+    margin: 0;
+}
+
+.genomic-result-badge {
+    padding: 4px 12px;
+    background: #9de2ed;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Stage Display */
+.genomic-stage-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 20px 0;
+}
+
+.genomic-stage-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.genomic-stage-emoji {
+    font-size: 30px;
+}
+
+.genomic-stage-text {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.genomic-stage-confidence {
+    text-align: center;
+}
+
+.genomic-confidence-label {
+    display: block;
+    color: #262e31;
+    font-size: 14px;
+}
+
+.genomic-confidence-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #39a5b6;
+}
+
+/* Result Details */
+.genomic-result-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 15px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.genomic-detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.genomic-detail-label {
+    color: #454849;
+}
+
+.genomic-detail-value {
+    font-weight: 600;
+}
+
+/* Probabilities */
+.genomic-probabilities-section {
+    padding: 15px 0;
+}
+
+.genomic-probabilities-section h4 {
+    margin-bottom: 15px;
+}
+
+.genomic-bar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.genomic-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.genomic-bar-label-group {
+    min-width: 70px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.genomic-bar-dot {
+    font-size: 12px;
+}
+
+.genomic-bar-dot.early-dot {
+    color: #4CAF50;
+}
+
+.genomic-bar-dot.late-dot {
+    color: #f44336;
+}
+
+.genomic-bar-label {
+    font-size: 14px;
+}
+
+.genomic-bar-track {
+    flex: 1;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+}
+
+.genomic-bar-fill {
+    height: 100%;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    transition: width 0.8s ease;
+}
+
+.genomic-bar-fill.early-fill {
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+}
+
+.genomic-bar-fill.late-fill {
+    background: linear-gradient(90deg, #f44336, #ef5350);
+}
+
+.genomic-bar-percent {
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Probability Numbers */
+.genomic-probabilities-numbers {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.genomic-prob-number {
+    text-align: center;
+}
+
+.genomic-num-label {
+    display: block;
+    color: #535759;
+    font-size: 12px;
+}
+
+.genomic-num-value {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.genomic-prob-number.early-num .genomic-num-value {
+    color: #4CAF50;
+}
+
+.genomic-prob-number.late-num .genomic-num-value {
+    color: #f44336;
+}
+
+/* Features */
+.genomic-features {
+    padding: 15px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.genomic-features h4 {
+    margin-bottom: 15px;
+}
+
+.genomic-features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.genomic-feature-group {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.genomic-feature-group h5 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+}
+
+.genomic-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.genomic-feature-item {
+    font-size: 12px;
+    color: #717b80;
+    font-family: monospace;
+}
+
+.genomic-feature-more {
+    font-size: 12px;
+    color: #39a5b6;
+    font-style: italic;
+}
+
+/* Model Info */
+.genomic-model-info {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #595e60;
+    text-align: center;
+}
+
+.genomic-model-info p {
+    margin: 5px 0;
+}
+
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .genomic-page {
+        padding: 10px;
+    }
+
+    .genomic-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .genomic-card {
+        padding: 20px;
+    }
+
+    .genomic-tabs {
+        flex-direction: column;
+    }
+
+    .genomic-tab {
+        width: 100%;
+    }
+
+    .genomic-patient-input-group {
+        flex-direction: column;
+    }
+
+    .genomic-stage-main {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .genomic-result-details {
+        grid-template-columns: 1fr;
+    }
+
+    .genomic-features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .genomic-probabilities-numbers {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .genomic-bar-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .genomic-bar-label-group {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .genomic-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .genomic-card {
+        padding: 15px;
+    }
+
+    .genomic-stage-circle {
+        width: 80px;
+        height: 80px;
+    }
+
+    .genomic-stage-text {
+        font-size: 16px;
+    }
+
+    .genomic-confidence-value {
+        font-size: 22px;
+    }
 }

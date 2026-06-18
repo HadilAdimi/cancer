@@ -45,7 +45,7 @@ exports.login = async (req, res) => {
 
       // FIX: Use patient._id (the Patient document ID)
       const token = jwt.sign(
-        { id: patientUser._id, role: "patient" },  // This should be patient._id
+        { id: patient._id, role: "patient" },  // This should be patient._id
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );

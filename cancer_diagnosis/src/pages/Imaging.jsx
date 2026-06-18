@@ -17,7 +17,7 @@ export default function Imaging() {
   
   const resultRef = useRef(null);
   
-  const API_BASE_URL = "http://127.0.0.1:5000";
+  const API_BASE_URL = "http://127.0.0.1:8000";
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
